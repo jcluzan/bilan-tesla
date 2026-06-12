@@ -212,41 +212,52 @@ export default function BilanTesla() {
       : `Résultat : sur cette période, le coût a été ${formatEUR(Math.abs(totalSavings))} plus élevé que l'équivalent thermique, soit environ ${Math.abs(savingsPct).toFixed(0)} % de plus.`
   }`;
 
-  const reportRef = useRef(null);
+  const sectionRefsArr = useRef([]);
+  sectionRefsArr.current = [];
+  const registerSection = (el) => {
+    if (el && !sectionRefsArr.current.includes(el)) sectionRefsArr.current.push(el);
+  };
   const [exporting, setExporting] = useState(false);
 
   const handleExportPDF = async () => {
-    if (!reportRef.current) return;
     setExporting(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        backgroundColor: '#F5F6F4',
-        useCORS: true,
-        ignoreElements: (el) => el.classList?.contains('pdf-ignore'),
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
+      let y = margin;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.text(`Tesla vs ${vehicleLabel}`, margin, y + 6);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text('Bilan annuel - energie & entretien', margin, y + 12);
+      y += 20;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      for (const el of sectionRefsArr.current) {
+        const canvas = await html2canvas(el, {
+          scale: 2,
+          backgroundColor: '#FFFFFF',
+          useCORS: true,
+          ignoreElements: (node) => node.classList?.contains('pdf-ignore'),
+        });
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+        if (y + imgHeight > pageHeight - margin && y > margin) {
+          pdf.addPage();
+          y = margin;
+        }
+
+        pdf.addImage(imgData, 'PNG', margin, y, contentWidth, imgHeight);
+        y += imgHeight + 6;
       }
 
       const year = new Date().getFullYear();
@@ -260,7 +271,7 @@ export default function BilanTesla() {
 
   return (
     <div className="min-h-screen bg-[#F5F6F4] text-[#1A1F26]" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-10" ref={reportRef}>
+      <div className="max-w-5xl mx-auto px-6 md:px-10 py-10">
         {/* Header */}
         <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
@@ -311,7 +322,7 @@ export default function BilanTesla() {
           {/* Main content */}
           <div className="flex flex-col gap-6">
             {/* Section card */}
-            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
+            <div ref={registerSection} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 01 — Profil & configuration
               </h2>
@@ -364,7 +375,7 @@ export default function BilanTesla() {
             </div>
 
             {/* Section 2 card */}
-            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
+            <div ref={registerSection} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 02 — Énergie maison
               </h2>
@@ -403,7 +414,7 @@ export default function BilanTesla() {
             </div>
 
             {/* Section 3 card */}
-            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
+            <div ref={registerSection} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 03 — Superchargeurs
               </h2>
@@ -499,7 +510,7 @@ export default function BilanTesla() {
             </div>
 
             {/* Section 4 card */}
-            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
+            <div ref={registerSection} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 04 — Entretien Tesla
               </h2>
@@ -582,7 +593,7 @@ export default function BilanTesla() {
             </div>
 
             {/* Section 5 card */}
-            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
+            <div ref={registerSection} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 05 — Bilan comparatif
               </h2>
