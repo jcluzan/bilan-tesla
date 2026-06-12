@@ -246,6 +246,25 @@ export default function BilanTesla() {
           backgroundColor: '#FFFFFF',
           useCORS: true,
           ignoreElements: (node) => node.classList?.contains('pdf-ignore'),
+          onclone: (clonedDoc) => {
+            clonedDoc.querySelectorAll('input').forEach((input) => {
+              const div = clonedDoc.createElement('div');
+              div.className = input.className;
+              let text = input.value !== '' ? input.value : input.placeholder || '';
+              if (input.type === 'date' && input.value) {
+                const [yy, mm, dd] = input.value.split('-');
+                text = `${dd}/${mm}/${yy}`;
+              }
+              div.textContent = text;
+              div.style.display = 'flex';
+              div.style.alignItems = 'center';
+              div.style.minHeight = '100%';
+              if (input.value === '' && input.placeholder) {
+                div.style.color = '#A8AFB8';
+              }
+              input.replaceWith(div);
+            });
+          },
         });
 
         const imgData = canvas.toDataURL('image/png');
