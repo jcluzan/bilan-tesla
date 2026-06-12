@@ -27,7 +27,7 @@ function Gauge({ value, max, accent }) {
           key={i}
           className="h-3 flex-1 rounded-sm"
           style={{
-            background: i < filled ? accent : 'rgba(255,255,255,0.07)',
+            background: i < filled ? accent : 'rgba(0,0,0,0.06)',
             transition: 'background 0.3s ease',
           }}
         />
@@ -42,16 +42,16 @@ function CompareBar({ label, teslaValue, audiValue }) {
   return (
     <div>
       <div className="flex items-center justify-between text-[13px] mb-1.5">
-        <span className="text-[#8B96A3]">{label}</span>
+        <span className="text-[#6B7480]">{label}</span>
         <span className="font-mono text-[12px]">
-          <span className="text-[#5EEAD4]">{formatEUR(teslaValue)}</span>
-          <span className="text-[#5A6672] mx-1.5">vs</span>
-          <span className="text-[#F4A261]">{formatEUR(audiValue)}</span>
+          <span className="text-[#0D9488]">{formatEUR(teslaValue)}</span>
+          <span className="text-[#8A93A0] mx-1.5">vs</span>
+          <span className="text-[#D97706]">{formatEUR(audiValue)}</span>
         </span>
       </div>
-      <div className="flex h-2.5 rounded-full overflow-hidden bg-[rgba(255,255,255,0.07)]">
-        <div className="h-full bg-[#5EEAD4]" style={{ width: `${teslaPct}%`, transition: 'width 0.3s ease' }} />
-        <div className="h-full bg-[#F4A261]" style={{ width: `${100 - teslaPct}%`, transition: 'width 0.3s ease' }} />
+      <div className="flex h-2.5 rounded-full overflow-hidden bg-[rgba(0,0,0,0.06)]">
+        <div className="h-full bg-[#0D9488]" style={{ width: `${teslaPct}%`, transition: 'width 0.3s ease' }} />
+        <div className="h-full bg-[#D97706]" style={{ width: `${100 - teslaPct}%`, transition: 'width 0.3s ease' }} />
       </div>
     </div>
   );
@@ -60,8 +60,8 @@ function CompareBar({ label, teslaValue, audiValue }) {
 function Field({ label, suffix, value, onChange, step = '0.01', placeholder }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] text-[#8B96A3] font-medium tracking-wide">{label}</span>
-      <div className="flex items-center bg-[#0E1318] border border-[#262E37] rounded-lg px-3 focus-within:border-[#5EEAD4] transition-colors">
+      <span className="text-[13px] text-[#6B7480] font-medium tracking-wide">{label}</span>
+      <div className="flex items-center bg-[#F1F3F5] border border-[#D7DBE1] rounded-lg px-3 focus-within:border-[#0D9488] transition-colors">
         <input
           type="number"
           inputMode="decimal"
@@ -69,9 +69,26 @@ function Field({ label, suffix, value, onChange, step = '0.01', placeholder }) {
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
-          className="w-full bg-transparent py-2.5 text-[15px] font-mono text-[#F4F2ED] placeholder-[#4A5560] outline-none"
+          className="w-full bg-transparent py-2.5 text-[15px] font-mono text-[#1A1F26] placeholder-[#A8AFB8] outline-none"
         />
-        <span className="text-[13px] text-[#5A6672] font-mono pl-2 whitespace-nowrap">{suffix}</span>
+        <span className="text-[13px] text-[#8A93A0] font-mono pl-2 whitespace-nowrap">{suffix}</span>
+      </div>
+    </label>
+  );
+}
+
+function TextField({ label, value, onChange, placeholder, full = false }) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${full ? 'sm:col-span-2' : ''}`}>
+      <span className="text-[13px] text-[#6B7480] font-medium tracking-wide">{label}</span>
+      <div className="flex items-center bg-[#F1F3F5] border border-[#D7DBE1] rounded-lg px-3 focus-within:border-[#0D9488] transition-colors">
+        <input
+          type="text"
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-transparent py-2.5 text-[15px] font-medium text-[#1A1F26] placeholder-[#A8AFB8] outline-none"
+        />
       </div>
     </label>
   );
@@ -85,13 +102,14 @@ function Cell({ type = 'text', value, onChange, step, placeholder, align = 'left
       value={value}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full bg-[#0E1318] border border-[#262E37] rounded-md px-2 py-2 text-[13px] font-mono text-[#F4F2ED] placeholder-[#4A5560] outline-none focus:border-[#5EEAD4] transition-colors text-${align}`}
+      className={`w-full bg-[#F1F3F5] border border-[#D7DBE1] rounded-md px-2 py-2 text-[13px] font-mono text-[#1A1F26] placeholder-[#A8AFB8] outline-none focus:border-[#0D9488] transition-colors text-${align}`}
     />
   );
 }
 
 export default function BilanTesla() {
   const [profile, setProfile] = useState({
+    vehicleName: '',
     dieselPrice: 1.85,
     audiConso: 6.5,
     teslaKm: 18000,
@@ -180,13 +198,15 @@ export default function BilanTesla() {
   const totalSavings = audiTotalCost - teslaTotalCost;
   const savingsPct = audiTotalCost > 0 ? (totalSavings / audiTotalCost) * 100 : 0;
 
+  const vehicleLabel = profile.vehicleName.trim() || 'ton ancien véhicule thermique';
+
   const chartData = [
-    { name: 'Énergie', Tesla: Math.round(teslaEnergyCost), 'Audi A3': Math.round(dieselCost) },
-    { name: 'Entretien', Tesla: Math.round(maintenanceTotal), 'Audi A3': Math.round(vidangeCostTotal) },
-    { name: 'Total', Tesla: Math.round(teslaTotalCost), 'Audi A3': Math.round(audiTotalCost) },
+    { name: 'Énergie', Tesla: Math.round(teslaEnergyCost), [vehicleLabel]: Math.round(dieselCost) },
+    { name: 'Entretien', Tesla: Math.round(maintenanceTotal), [vehicleLabel]: Math.round(vidangeCostTotal) },
+    { name: 'Total', Tesla: Math.round(teslaTotalCost), [vehicleLabel]: Math.round(audiTotalCost) },
   ];
 
-  const bilanText = `Cette année, sur ${profile.teslaKm || 0} km parcourus, ta Tesla t'a coûté ${formatEUR(teslaTotalCost)} au total : ${formatEUR(teslaEnergyCost)} en énergie (maison + superchargeurs) et ${formatEUR(maintenanceTotal)} en entretien. Avec ton ancienne Audi A3 (${profile.audiConso || 0} L/100 km à ${(profile.dieselPrice || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €/L), le même trajet aurait coûté ${formatEUR(audiTotalCost)} : ${formatEUR(dieselCost)} en diesel et ${formatEUR(vidangeCostTotal)} en entretien. ${
+  const bilanText = `Cette année, sur ${profile.teslaKm || 0} km parcourus, ta Tesla t'a coûté ${formatEUR(teslaTotalCost)} au total : ${formatEUR(teslaEnergyCost)} en énergie (maison + superchargeurs) et ${formatEUR(maintenanceTotal)} en entretien. Avec ${vehicleLabel} (${profile.audiConso || 0} L/100 km à ${(profile.dieselPrice || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €/L), le même trajet aurait coûté ${formatEUR(audiTotalCost)} : ${formatEUR(dieselCost)} en carburant et ${formatEUR(vidangeCostTotal)} en entretien. ${
     totalSavings >= 0
       ? `Résultat : tu as économisé ${formatEUR(totalSavings)} cette année, soit environ ${savingsPct.toFixed(0)} % de moins que l'équivalent thermique.`
       : `Résultat : sur cette période, le coût a été ${formatEUR(Math.abs(totalSavings))} plus élevé que l'équivalent thermique, soit environ ${Math.abs(savingsPct).toFixed(0)} % de plus.`
@@ -204,7 +224,7 @@ export default function BilanTesla() {
 
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
-        backgroundColor: '#0B0E12',
+        backgroundColor: '#F5F6F4',
         useCORS: true,
         ignoreElements: (el) => el.classList?.contains('pdf-ignore'),
       });
@@ -239,18 +259,18 @@ export default function BilanTesla() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0E12] text-[#F4F2ED]" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6F4] text-[#1A1F26]" style={{ fontFamily: "'Inter', sans-serif" }}>
       <div className="max-w-5xl mx-auto px-6 md:px-10 py-10" ref={reportRef}>
         {/* Header */}
         <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <div className="text-[12px] font-mono uppercase tracking-[0.2em] text-[#5EEAD4] mb-2">
-              Bilan annuel — relevé du 1er septembre
+            <div className="text-[12px] font-mono uppercase tracking-[0.2em] text-[#0D9488] mb-2">
+              Bilan annuel — énergie & entretien
             </div>
             <h1 className="text-[32px] md:text-[40px] font-bold leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Tesla vs Audi A3 — ce que la conversion m'a rapporté
+              Tesla vs {vehicleLabel} — ce que la conversion m'a rapporté
             </h1>
-            <p className="text-[#8B96A3] text-[15px] mt-2 max-w-2xl">
+            <p className="text-[#6B7480] text-[15px] mt-2 max-w-2xl">
               Remplis tes relevés au fil de l'année, et obtiens un bilan complet en graphes et en chiffres,
               prêt à exporter en PDF pour ta vidéo bilan.
             </p>
@@ -258,7 +278,7 @@ export default function BilanTesla() {
           <button
             onClick={handleExportPDF}
             disabled={exporting}
-            className="pdf-ignore flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#5EEAD4]/40 bg-[#5EEAD4]/10 text-[#5EEAD4] text-[14px] font-medium hover:bg-[#5EEAD4]/20 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="pdf-ignore flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#0D9488]/40 bg-[#0D9488]/10 text-[#0D9488] text-[14px] font-medium hover:bg-[#0D9488]/20 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <Download size={16} />
             {exporting ? 'Génération du PDF…' : 'Exporter en PDF'}
@@ -273,14 +293,14 @@ export default function BilanTesla() {
                 key={s.id}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border whitespace-nowrap ${
                   s.status === 'active'
-                    ? 'border-[#5EEAD4]/40 bg-[#5EEAD4]/10'
-                    : 'border-[#1E252D] bg-transparent opacity-50'
+                    ? 'border-[#0D9488]/40 bg-[#0D9488]/10'
+                    : 'border-[#E5E7EB] bg-transparent opacity-50'
                 }`}
               >
-                <span className="font-mono text-[12px] text-[#5A6672]">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-mono text-[12px] text-[#8A93A0]">{String(i + 1).padStart(2, '0')}</span>
                 <span className="text-[14px] font-medium">{s.label}</span>
                 {s.status === 'soon' && (
-                  <span className="text-[10px] font-mono uppercase tracking-wide text-[#5A6672] ml-auto">
+                  <span className="text-[10px] font-mono uppercase tracking-wide text-[#8A93A0] ml-auto">
                     à venir
                   </span>
                 )}
@@ -291,15 +311,22 @@ export default function BilanTesla() {
           {/* Main content */}
           <div className="flex flex-col gap-6">
             {/* Section card */}
-            <div className="bg-[#12171D] border border-[#1E252D] rounded-2xl p-6 md:p-8">
+            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 01 — Profil & configuration
               </h2>
-              <p className="text-[#8B96A3] text-[13px] mb-6">
-                Ces valeurs de référence servent de base à toutes les comparaisons avec ton ancienne Audi A3.
+              <p className="text-[#6B7480] text-[13px] mb-6">
+                Ces valeurs de référence servent de base à toutes les comparaisons avec ton ancien véhicule thermique.
               </p>
 
               <div className="grid sm:grid-cols-2 gap-5">
+                <TextField
+                  label="Véhicule thermique de référence (marque et modèle)"
+                  placeholder="ex. Audi A3 2.0 TDI"
+                  value={profile.vehicleName}
+                  onChange={set('vehicleName')}
+                  full
+                />
                 <Field
                   label="Kilomètres parcourus cette année (Tesla)"
                   suffix="km"
@@ -314,7 +341,7 @@ export default function BilanTesla() {
                   onChange={set('dieselPrice')}
                 />
                 <Field
-                  label="Consommation moyenne de l'Audi A3"
+                  label={`Consommation moyenne de ${vehicleLabel}`}
                   suffix="L / 100 km"
                   value={profile.audiConso}
                   onChange={set('audiConso')}
@@ -337,11 +364,11 @@ export default function BilanTesla() {
             </div>
 
             {/* Section 2 card */}
-            <div className="bg-[#12171D] border border-[#1E252D] rounded-2xl p-6 md:p-8">
+            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 02 — Énergie maison
               </h2>
-              <p className="text-[#8B96A3] text-[13px] mb-6">
+              <p className="text-[#6B7480] text-[13px] mb-6">
                 Le relevé annuel de ta borne à la maison : la quantité d'énergie chargée et le prix payé au kWh.
               </p>
 
@@ -362,32 +389,32 @@ export default function BilanTesla() {
                 />
               </div>
 
-              <div className="mt-6 pt-5 border-t border-[#1E252D] flex items-center justify-between">
+              <div className="mt-6 pt-5 border-t border-[#E5E7EB] flex items-center justify-between">
                 <div>
-                  <div className="text-[13px] text-[#8B96A3] mb-1">Coût total énergie maison</div>
-                  <div className="text-[34px] font-bold font-mono text-[#5EEAD4]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div className="text-[13px] text-[#6B7480] mb-1">Coût total énergie maison</div>
+                  <div className="text-[34px] font-bold font-mono text-[#0D9488]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                     {formatEUR(homeCost)}
                   </div>
                 </div>
                 <div className="w-1/2">
-                  <Gauge value={homeCost} max={1000} accent="#5EEAD4" />
+                  <Gauge value={homeCost} max={1000} accent="#0D9488" />
                 </div>
               </div>
             </div>
 
             {/* Section 3 card */}
-            <div className="bg-[#12171D] border border-[#1E252D] rounded-2xl p-6 md:p-8">
+            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 03 — Superchargeurs
               </h2>
-              <p className="text-[#8B96A3] text-[13px] mb-6">
+              <p className="text-[#6B7480] text-[13px] mb-6">
                 Une ligne par session de charge sur ton compte Tesla : date, énergie chargée et prix payé au kWh.
               </p>
 
               <div className="overflow-x-auto">
                 <table className="w-full border-separate border-spacing-y-2 min-w-[480px]">
                   <thead>
-                    <tr className="text-[11px] uppercase tracking-wide text-[#5A6672]">
+                    <tr className="text-[11px] uppercase tracking-wide text-[#8A93A0]">
                       <th className="text-left font-medium pb-1 w-[30%]">Date</th>
                       <th className="text-left font-medium pb-1 w-[22%]">Énergie (kWh)</th>
                       <th className="text-left font-medium pb-1 w-[22%]">Prix (€/kWh)</th>
@@ -427,14 +454,14 @@ export default function BilanTesla() {
                               onChange={(v) => updateSuperRow(row.id, 'price', v)}
                             />
                           </td>
-                          <td className="text-right pr-2 font-mono text-[13px] text-[#5EEAD4] whitespace-nowrap">
+                          <td className="text-right pr-2 font-mono text-[13px] text-[#0D9488] whitespace-nowrap">
                             {formatEUR(lineTotal)}
                           </td>
                           <td>
                             <button
                               onClick={() => removeSuperRow(row.id)}
                               aria-label="Supprimer la ligne"
-                              className="pdf-ignore flex items-center justify-center w-8 h-8 rounded-md text-[#5A6672] hover:text-[#F4A261] hover:bg-[#F4A261]/10 transition-colors"
+                              className="pdf-ignore flex items-center justify-center w-8 h-8 rounded-md text-[#8A93A0] hover:text-[#D97706] hover:bg-[#D97706]/10 transition-colors"
                             >
                               <Trash2 size={15} />
                             </button>
@@ -448,42 +475,42 @@ export default function BilanTesla() {
 
               <button
                 onClick={addSuperRow}
-                className="pdf-ignore mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[#5EEAD4] hover:text-[#9AF3E3] transition-colors"
+                className="pdf-ignore mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[#0D9488] hover:text-[#14B8A6] transition-colors"
               >
                 <Plus size={15} />
                 Ajouter une session de charge
               </button>
 
-              <div className="mt-6 pt-5 border-t border-[#1E252D] grid sm:grid-cols-2 gap-6">
+              <div className="mt-6 pt-5 border-t border-[#E5E7EB] grid sm:grid-cols-2 gap-6">
                 <div>
-                  <div className="text-[13px] text-[#8B96A3] mb-1">Énergie totale chargée (superchargeurs)</div>
-                  <div className="text-[28px] font-bold font-mono text-[#5EEAD4]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div className="text-[13px] text-[#6B7480] mb-1">Énergie totale chargée (superchargeurs)</div>
+                  <div className="text-[28px] font-bold font-mono text-[#0D9488]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                     {superTotals.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kWh
                   </div>
                 </div>
                 <div>
-                  <div className="text-[13px] text-[#8B96A3] mb-1">Coût total superchargeurs</div>
-                  <div className="text-[28px] font-bold font-mono text-[#5EEAD4]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div className="text-[13px] text-[#6B7480] mb-1">Coût total superchargeurs</div>
+                  <div className="text-[28px] font-bold font-mono text-[#0D9488]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                     {formatEUR(superTotals.cost)}
                   </div>
-                  <Gauge value={superTotals.cost} max={1500} accent="#5EEAD4" />
+                  <Gauge value={superTotals.cost} max={1500} accent="#0D9488" />
                 </div>
               </div>
             </div>
 
             {/* Section 4 card */}
-            <div className="bg-[#12171D] border border-[#1E252D] rounded-2xl p-6 md:p-8">
+            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 04 — Entretien Tesla
               </h2>
-              <p className="text-[#8B96A3] text-[13px] mb-6">
+              <p className="text-[#6B7480] text-[13px] mb-6">
                 Tes dépenses d'entretien sur l'année : pneus, révisions, accessoires, etc.
               </p>
 
               <div className="overflow-x-auto">
                 <table className="w-full border-separate border-spacing-y-2 min-w-[480px]">
                   <thead>
-                    <tr className="text-[11px] uppercase tracking-wide text-[#5A6672]">
+                    <tr className="text-[11px] uppercase tracking-wide text-[#8A93A0]">
                       <th className="text-left font-medium pb-1 w-[25%]">Date</th>
                       <th className="text-left font-medium pb-1 w-[50%]">Libellé</th>
                       <th className="text-right font-medium pb-1 w-[19%]">Montant (€)</th>
@@ -522,7 +549,7 @@ export default function BilanTesla() {
                           <button
                             onClick={() => removeMaintenanceRow(row.id)}
                             aria-label="Supprimer la ligne"
-                            className="pdf-ignore flex items-center justify-center w-8 h-8 rounded-md text-[#5A6672] hover:text-[#F4A261] hover:bg-[#F4A261]/10 transition-colors"
+                            className="pdf-ignore flex items-center justify-center w-8 h-8 rounded-md text-[#8A93A0] hover:text-[#D97706] hover:bg-[#D97706]/10 transition-colors"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -535,43 +562,43 @@ export default function BilanTesla() {
 
               <button
                 onClick={addMaintenanceRow}
-                className="pdf-ignore mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[#5EEAD4] hover:text-[#9AF3E3] transition-colors"
+                className="pdf-ignore mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[#0D9488] hover:text-[#14B8A6] transition-colors"
               >
                 <Plus size={15} />
                 Ajouter une dépense
               </button>
 
-              <div className="mt-6 pt-5 border-t border-[#1E252D] flex items-center justify-between">
+              <div className="mt-6 pt-5 border-t border-[#E5E7EB] flex items-center justify-between">
                 <div>
-                  <div className="text-[13px] text-[#8B96A3] mb-1">Coût total entretien Tesla</div>
-                  <div className="text-[34px] font-bold font-mono text-[#5EEAD4]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div className="text-[13px] text-[#6B7480] mb-1">Coût total entretien Tesla</div>
+                  <div className="text-[34px] font-bold font-mono text-[#0D9488]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                     {formatEUR(maintenanceTotal)}
                   </div>
                 </div>
                 <div className="w-1/2">
-                  <Gauge value={maintenanceTotal} max={600} accent="#5EEAD4" />
+                  <Gauge value={maintenanceTotal} max={600} accent="#0D9488" />
                 </div>
               </div>
             </div>
 
             {/* Section 5 card */}
-            <div className="bg-[#12171D] border border-[#1E252D] rounded-2xl p-6 md:p-8">
+            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 md:p-8">
               <h2 className="text-[20px] font-semibold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 05 — Bilan comparatif
               </h2>
-              <p className="text-[#8B96A3] text-[13px] mb-6">
-                Tesla (teal) vs Audi A3 diesel équivalente (amber), pour {profile.teslaKm || 0} km parcourus cette année.
+              <p className="text-[#6B7480] text-[13px] mb-6">
+                Tesla (teal) vs {vehicleLabel} (amber), pour {profile.teslaKm || 0} km parcourus cette année.
               </p>
 
-              <div className="flex flex-col items-center text-center bg-[#0E1318] border border-[#1E252D] rounded-xl py-6 mb-6">
-                <div className="text-[12px] font-mono uppercase tracking-[0.2em] text-[#5A6672] mb-2">
+              <div className="flex flex-col items-center text-center bg-[#F1F3F5] border border-[#E5E7EB] rounded-xl py-6 mb-6">
+                <div className="text-[12px] font-mono uppercase tracking-[0.2em] text-[#8A93A0] mb-2">
                   Économie totale sur l'année
                 </div>
                 <div
                   className="text-[44px] md:text-[52px] font-bold font-mono"
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
-                    color: totalSavings >= 0 ? '#5EEAD4' : '#F4A261',
+                    color: totalSavings >= 0 ? '#0D9488' : '#D97706',
                   }}
                 >
                   {totalSavings >= 0 ? '+' : ''}{formatEUR(totalSavings)}
@@ -587,36 +614,36 @@ export default function BilanTesla() {
               <div className="mt-6" style={{ height: 220, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E252D" vertical={false} />
-                    <XAxis dataKey="name" stroke="#5A6672" tick={{ fontSize: 12, fontFamily: 'Inter' }} />
-                    <YAxis stroke="#5A6672" tick={{ fontSize: 11, fontFamily: 'JetBrains Mono' }} width={50} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                    <XAxis dataKey="name" stroke="#8A93A0" tick={{ fontSize: 12, fontFamily: 'Inter' }} />
+                    <YAxis stroke="#8A93A0" tick={{ fontSize: 11, fontFamily: 'JetBrains Mono' }} width={50} />
                     <Tooltip
-                      contentStyle={{ background: '#0E1318', border: '1px solid #262E37', borderRadius: 8, fontSize: 12 }}
-                      labelStyle={{ color: '#F4F2ED' }}
+                      contentStyle={{ background: '#F1F3F5', border: '1px solid #D7DBE1', borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: '#1A1F26' }}
                       formatter={(value) => formatEUR(value)}
                     />
-                    <Bar dataKey="Tesla" fill="#5EEAD4" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Audi A3" fill="#F4A261" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Tesla" fill="#0D9488" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey={vehicleLabel} fill="#D97706" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-[#1E252D] grid sm:grid-cols-2 gap-6 text-[13px]">
+              <div className="mt-6 pt-5 border-t border-[#E5E7EB] grid sm:grid-cols-2 gap-6 text-[13px]">
                 <div>
-                  <div className="text-[#8B96A3] mb-1">Coût total Tesla (énergie + entretien)</div>
-                  <div className="font-mono font-bold text-[#5EEAD4] text-[18px]">{formatEUR(teslaTotalCost)}</div>
+                  <div className="text-[#6B7480] mb-1">Coût total Tesla (énergie + entretien)</div>
+                  <div className="font-mono font-bold text-[#0D9488] text-[18px]">{formatEUR(teslaTotalCost)}</div>
                 </div>
                 <div>
-                  <div className="text-[#8B96A3] mb-1">Coût total Audi A3 équivalent</div>
-                  <div className="font-mono font-bold text-[#F4A261] text-[18px]">{formatEUR(audiTotalCost)}</div>
+                  <div className="text-[#6B7480] mb-1">Coût total {vehicleLabel}</div>
+                  <div className="font-mono font-bold text-[#D97706] text-[18px]">{formatEUR(audiTotalCost)}</div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-[#1E252D]">
-                <div className="text-[12px] font-mono uppercase tracking-[0.2em] text-[#5A6672] mb-3">
+              <div className="mt-6 pt-5 border-t border-[#E5E7EB]">
+                <div className="text-[12px] font-mono uppercase tracking-[0.2em] text-[#8A93A0] mb-3">
                   Bilan en quelques mots
                 </div>
-                <p className="text-[14px] leading-relaxed text-[#C9CFD6]">{bilanText}</p>
+                <p className="text-[14px] leading-relaxed text-[#3F4753]">{bilanText}</p>
               </div>
             </div>
           </div>
